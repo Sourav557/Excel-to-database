@@ -12,27 +12,26 @@ if uploaded_file:
         xl = pd.ExcelFile(uploaded_file)
         sheet_names = xl.sheet_names
 
-        st.success(f"Found {len(sheet_names)} sheets in file.")
+        st.success(f"✅ Found {len(sheet_names)} sheet(s).")
         selected_sheets = st.multiselect("Select sheets to sync:", sheet_names)
 
         if selected_sheets:
-            if st.button("Sync Selected Sheets to Database"):
-                for sheet in selected_sheets:
-                    st.subheader(f"Sheet: `{sheet}`")
-                    df = xl.parse(sheet)
+            for sheet in selected_sheets:
+                st.subheader(f"📄 Sheet: `{sheet}`")
+                df = xl.parse(sheet)
 
-                    if "id" not in df.columns:
-                        st.error("❌ Missing required primary key column: `id`")
-                        continue
+                if "id" not in df.columns:
+                    st.error("❌ Missing required primary key column: `id`")
+                    continue
 
-                    st.dataframe(df.head())
+                st.dataframe(df)
 
-                    with st.spinner("Synchronizing..."):
+                if st.button(f"Sync '{sheet}' to Database", key=sheet):
+                    with st.spinner("🔄 Synchronizing..."):
                         try:
                             inserted, updated = sync_sheet_to_db(df)
-                            st.success(f"✅ Sheet '{sheet}' synced: {inserted} inserted, {updated} updated.")
+                            st.success(f"✅ Sheet '{sheet}' synced successfully! Inserted: {inserted}, Updated: {updated}")
                         except Exception as e:
                             st.error(f"⚠️ Error syncing sheet '{sheet}': {e}")
-
     except Exception as e:
-        st.error(f"Failed to read Excel file: {e}")
+        st.error(f"❌ Failed to read Excel file: {e}")
